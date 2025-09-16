@@ -16,7 +16,7 @@ export const chatService = {
           'Accept': 'application/json'
         },
         withCredentials: false,
-        timeout: 10000 // 10 second timeout
+        timeout: 60000
       })
       
       console.log('API Response:', response.data)
@@ -52,7 +52,7 @@ export const chatService = {
           'Accept': 'application/json'
         },
         withCredentials: false,
-        timeout: 10000
+        timeout: 60000
       })
       
       console.log('Chat History Response:', response.data)

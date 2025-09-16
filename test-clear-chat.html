@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Chat Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .test-steps {
+            background: #f3e5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .test-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .test-steps li {
+            margin-bottom: 8px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Clear Chat Functionality Test</h1>
+        
+        <div class="test-instructions">
+            <h3>📋 Test Instructions</h3>
+            <p>This page tests the new "Clear Chat" functionality. Follow the steps below to verify everything works correctly.</p>
+        </div>
+        
+        <div class="test-steps">
+            <h3>🔍 Test Steps</h3>
+            <ol>
+                <li><strong>Open the chat widget</strong> by clicking the floating chat button</li>
+                <li><strong>Send a few messages</strong> to the AI assistant (e.g., "Hello", "Tell me about shoes")</li>
+                <li><strong>Verify products appear</strong> in the right sidebar</li>
+                <li><strong>Click the "New Chat" button</strong> (🗑️ New Chat) at the bottom of the chat</li>
+                <li><strong>Verify the following:</strong>
+                    <ul>
+                        <li>All messages are cleared except the initial "Hello! I'm your AI assistant..." message</li>
+                        <li>Product sidebar is empty</li>
+                        <li>New chat-id and hash-key are generated (check browser console)</li>
+                        <li>Input field is focused and ready for new messages</li>
+                    </ul>
+                </li>
+                <li><strong>Send a new message</strong> to verify the chat works normally after clearing</li>
+            </ol>
+        </div>
+        
+        <div class="status info">
+            <strong>💡 Expected Behavior:</strong> The clear chat function should reset the conversation while preserving the initial hello message, generate new session identifiers, and clear all product recommendations.
+        </div>
+        
+        <div class="status success">
+            <strong>✅ Success Criteria:</strong> After clicking "New Chat", you should see only the hello message, empty product sidebar, and be able to start a fresh conversation with new session identifiers.
+        </div>
+        
+        <div id="assistant-widget"></div>
+    </div>
+
+    <script type="module">
+        import { createApp } from 'vue'
+        import ChatWidget from './src/components/ChatWidget.vue'
+        
+        const app = createApp(ChatWidget, {
+            title: 'Clear Chat Test Assistant',
+            primaryColor: '#007bff'
+        })
+        
+        app.mount('#assistant-widget')
+        
+        // Add some debugging to help verify the functionality
+        console.log('🧪 Clear Chat Test Page Loaded')
+        console.log('📝 Check browser console for chat-id and hash-key changes when clearing chat')
+        
+        // Monitor localStorage changes
+        const originalSetItem = localStorage.setItem
+        localStorage.setItem = function(key, value) {
+            if (key.includes('assistant-widget-chat-id') || key.includes('assistant-widget-hash-key')) {
+                console.log(`🔄 ${key} updated:`, value)
+            }
+            return originalSetItem.apply(this, arguments)
+        }
+        
+        const originalRemoveItem = localStorage.removeItem
+        localStorage.removeItem = function(key) {
+            if (key.includes('assistant-widget-chat-id') || key.includes('assistant-widget-hash-key')) {
+                console.log(`🗑️ ${key} removed`)
+            }
+            return originalRemoveItem.apply(this, arguments)
+        }
+    </script>
+</body>
+</html>

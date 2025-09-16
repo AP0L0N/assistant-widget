@@ -132,6 +132,18 @@
                     <span class="send-icon">➤</span>
                   </button>
                 </div>
+                <!-- Clear Chat Button -->
+                <div class="chat-actions">
+                  <button
+                    @click="clearChat"
+                    class="clear-chat-button"
+                    :disabled="isLoading"
+                    title="Start new chat"
+                  >
+                    <span class="clear-icon">🗑️</span>
+                    <span class="clear-text">New Chat</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -334,7 +346,6 @@
               <div class="product-info-mini">
                 <h5 class="product-name-mini">{{ product.name }}</h5>
                 <p class="product-price-mini" v-if="product.price">${{ product.price }}</p>
-                <p class="product-brand-mini" v-if="product.brand">{{ product.brand }}</p>
               </div>
             </div>
           </div>
@@ -440,23 +451,8 @@ export default {
     }
   },
   mounted() {
-    this.loadChatState()
     this.loadRecentSearches()
-    this.saveChatState()
     this.detectTheme()
-    
-    // Add welcome message if no messages exist
-    if (this.messages.length === 0) {
-      this.addMessage({
-        id: this.getMessageId(),
-        type: 'ai',
-        content: 'Hello! I\'m your AI assistant. How can I help you today?',
-        timestamp: new Date()
-      })
-    }
-    
-    // Extract products from existing messages
-    this.extractProductsFromMessages()
     
     // Listen for theme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', this.detectTheme)
@@ -535,7 +531,6 @@ export default {
     addMessage(message) {
       this.messages.push(message)
       this.scrollToBottom()
-      this.saveChatState()
     },
     getMessageId() {
       return ++this.messageId
@@ -544,9 +539,17 @@ export default {
       try {
         const history = await chatService.getChatHistory(this.chatHistoryUrl, this.chatId, this.hashKey)
         
+        // Always start with the hello message at the top
+        const helloMessage = {
+          id: this.getMessageId(),
+          type: 'ai',
+          content: 'Hello! I\'m your AI assistant. How can I help you today?',
+          timestamp: new Date()
+        }
+        
         if (history.messages && history.messages.length > 0) {
           // Convert API messages to widget format
-          this.messages = history.messages.map(msg => ({
+          const apiMessages = history.messages.map(msg => ({
             id: this.getMessageId(),
             type: msg.type || 'ai',
             content: msg.content || msg.message,
@@ -554,12 +557,24 @@ export default {
             timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
           }))
           
-          // Update displayed products from history
-          this.extractProductsFromMessages()
+          // Pin hello message to the top, then add API messages
+          this.messages = [helloMessage, ...apiMessages]
+        } else {
+          // If no history, just show the hello message
+          this.messages = [helloMessage]
         }
+        
+        // Update displayed products from history
+        this.extractProductsFromMessages()
       } catch (error) {
         console.error('Error loading chat history:', error)
-        // Continue with empty messages if history fails to load
+        // If API fails, show just the hello message
+        this.messages = [{
+          id: this.getMessageId(),
+          type: 'ai',
+          content: 'Hello! I\'m your AI assistant. How can I help you today?',
+          timestamp: new Date()
+        }]
       }
     },
     handleProductClick(product) {
@@ -580,9 +595,6 @@ export default {
         }
         this.saveRecentSearches()
       }
-      
-      // Save state after product interaction
-      this.saveChatState()
     },
     sendQuickMessage(message) {
       this.currentMessage = message
@@ -774,45 +786,34 @@ export default {
       }
       return sessionId
     },
-    saveChatState() {
-      const chatState = {
-        messages: this.messages,
-        messageId: this.messageId,
-        sessionId: this.sessionId,
-        timestamp: new Date().toISOString()
+    clearChat() {
+      // Reset chat session (clears chat-id and hash-key from localStorage)
+      resetChatSession()
+      
+      // Generate new chat-id and hash-key
+      this.chatId = getChatId()
+      this.hashKey = getHashKey()
+      
+      // Clear messages except the initial hello message
+      const helloMessage = {
+        id: this.getMessageId(),
+        type: 'ai',
+        content: 'Hello! I\'m your AI assistant. How can I help you today?',
+        timestamp: new Date()
       }
-      localStorage.setItem('assistant-widget-state', JSON.stringify(chatState))
+      this.messages = [helloMessage]
+      
+      // Clear displayed products
+      this.displayedProducts = []
+      
+      // Clear current message input
+      this.currentMessage = ''
+      
+      // Focus on input after clearing
+      this.$nextTick(() => {
+        this.focusInput()
+      })
     },
-    loadChatState() {
-      try {
-        const savedState = localStorage.getItem('assistant-widget-state')
-        if (savedState) {
-          const chatState = JSON.parse(savedState)
-          
-          // Check if session is still valid (within 24 hours)
-          const stateTime = new Date(chatState.timestamp)
-          const now = new Date()
-          const hoursDiff = (now - stateTime) / (1000 * 60 * 60)
-          
-          if (hoursDiff < 24 && chatState.sessionId === this.sessionId) {
-            this.messages = chatState.messages || []
-            this.messageId = chatState.messageId || 0
-            
-            // Restore message timestamps
-            this.messages.forEach(message => {
-              if (message.timestamp) {
-                message.timestamp = new Date(message.timestamp)
-              }
-            })
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to load chat state:', error)
-        // Reset to default state if loading fails
-        this.messages = []
-        this.messageId = 0
-      }
-    }
   }
 }
 </script>
