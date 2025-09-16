@@ -29,7 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (container && !container.hasAttribute('data-initialized')) {
     container.setAttribute('data-initialized', 'true')
     createWidget('#assistant-widget', {
-      apiUrl: 'https://api.example.com/chat',
+      apiUrl: 'https://assistant-cms.ddev.site/actions/custommodule/assistant/new-message',
+      chatHistoryUrl: 'https://assistant-cms.ddev.site/actions/custommodule/assistant/get-chat-history',
       title: 'Online Assistant',
       primaryColor: '#007bff'
     })

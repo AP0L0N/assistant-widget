@@ -34,7 +34,8 @@ Add the widget to your website with just a few lines of code:
 <!-- Initialize the widget -->
 <script>
   AssistantWidget.createWidget('#assistant-widget', {
-    apiUrl: 'https://your-cms-api.com/chat',
+    apiUrl: 'https://your-cms-api.com/actions/custommodule/assistant/new-message',
+    chatHistoryUrl: 'https://your-cms-api.com/actions/custommodule/assistant/get-chat-history',
     title: 'Online Assistant',
     primaryColor: '#007bff'
   });
@@ -45,7 +46,8 @@ Add the widget to your website with just a few lines of code:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `apiUrl` | String | `'https://api.example.com/chat'` | Your CMS API endpoint for chat |
+| `apiUrl` | String | `'https://assistant-cms.ddev.site/actions/custommodule/assistant/new-message'` | Your CMS API endpoint for sending messages |
+| `chatHistoryUrl` | String | `'https://assistant-cms.ddev.site/actions/custommodule/assistant/get-chat-history'` | Your CMS API endpoint for retrieving chat history |
 | `title` | String | `'Online Assistant'` | Chat window title |
 | `primaryColor` | String | `'#007bff'` | Primary color for buttons and accents |
 

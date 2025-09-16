@@ -137,7 +137,8 @@
   <script>
     // Initialize the widget
     AssistantWidget.createWidget('#assistant-widget', {
-      apiUrl: 'https://api.example.com/chat',
+      apiUrl: 'https://assistant-cms.ddev.site/actions/custommodule/assistant/new-message',
+      chatHistoryUrl: 'https://assistant-cms.ddev.site/actions/custommodule/assistant/get-chat-history',
       title: 'Shoe Assistant',
       primaryColor: '#17a2b8'
     });

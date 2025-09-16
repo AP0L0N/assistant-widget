@@ -349,7 +349,7 @@
 
 <script>
 import ChatMessage from './ChatMessage.vue'
-import { chatService } from '../services/api.js'
+import { chatService, getChatId, getHashKey, resetChatSession } from '../services/api.js'
 
 export default {
   name: 'ChatWidget',
@@ -359,7 +359,11 @@ export default {
   props: {
     apiUrl: {
       type: String,
-      default: 'https://api.example.com/chat'
+      default: 'https://assistant-cms.ddev.site/actions/custommodule/assistant/new-message'
+    },
+    chatHistoryUrl: {
+      type: String,
+      default: 'https://assistant-cms.ddev.site/actions/custommodule/assistant/get-chat-history'
     },
     title: {
       type: String,
@@ -378,6 +382,8 @@ export default {
       isLoading: false,
       messageId: 0,
       sessionId: this.getSessionId(),
+      chatId: getChatId(),
+      hashKey: getHashKey(),
       activeTab: 'ai-assistant',
       recentSearches: [],
       displayedProducts: [],
@@ -461,9 +467,11 @@ export default {
     }
   },
   methods: {
-    toggleChat() {
+    async toggleChat() {
       this.isOpen = !this.isOpen
       if (this.isOpen) {
+        // Load chat history when opening
+        await this.loadChatHistory()
         this.$nextTick(() => {
           this.focusInput()
           this.scrollToBottom()
@@ -501,7 +509,7 @@ export default {
       this.isLoading = true
 
       try {
-        const response = await chatService.sendMessage(messageContent, this.apiUrl, this.sessionId)
+        const response = await chatService.sendMessage(messageContent, this.apiUrl, this.chatId, this.hashKey)
         this.addMessage({
           id: this.getMessageId(),
           type: 'ai',
@@ -531,6 +539,28 @@ export default {
     },
     getMessageId() {
       return ++this.messageId
+    },
+    async loadChatHistory() {
+      try {
+        const history = await chatService.getChatHistory(this.chatHistoryUrl, this.chatId, this.hashKey)
+        
+        if (history.messages && history.messages.length > 0) {
+          // Convert API messages to widget format
+          this.messages = history.messages.map(msg => ({
+            id: this.getMessageId(),
+            type: msg.type || 'ai',
+            content: msg.content || msg.message,
+            products: msg.products || [],
+            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+          }))
+          
+          // Update displayed products from history
+          this.extractProductsFromMessages()
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error)
+        // Continue with empty messages if history fails to load
+      }
     },
     handleProductClick(product) {
       // Handle product click - could open product page, add to cart, etc.
@@ -696,9 +726,23 @@ export default {
       this.messages.forEach(message => {
         if (message.type === 'ai' && message.products) {
           message.products.forEach(product => {
+            // Transform products to match expected format
+            const transformedProduct = {
+              id: product.id,
+              name: product.title || product.name,
+              description: product.description || '',
+              price: product.price || 0,
+              image: product.imageUrl || product.image,
+              url: product.url || '#',
+              category: product.category || '',
+              brand: product.brand || '',
+              sizes: product.sizes || [],
+              colors: product.colors || []
+            }
+            
             // Avoid duplicates
-            if (!products.find(p => p.id === product.id)) {
-              products.push(product)
+            if (!products.find(p => p.id === transformedProduct.id)) {
+              products.push(transformedProduct)
             }
           })
         }
