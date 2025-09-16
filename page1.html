@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 1 - Assistant Widget Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .page-content {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .nav-links {
+      margin: 20px 0;
+      text-align: center;
+    }
+    .nav-links a {
+      display: inline-block;
+      margin: 0 10px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+    .nav-links a:hover {
+      background: #0056b3;
+    }
+    .test-instructions {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .test-instructions h3 {
+      margin-top: 0;
+      color: #495057;
+    }
+    .test-instructions ol {
+      margin: 10px 0;
+    }
+    .test-instructions li {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-content">
+    <h1>🏠 Page 1 - Home</h1>
+    <p>Welcome to the Assistant Widget state persistence test!</p>
+    
+    <div class="nav-links">
+      <a href="page1.html">Page 1 (Home)</a>
+      <a href="page2.html">Page 2 (Products)</a>
+      <a href="page3.html">Page 3 (About)</a>
+    </div>
+    
+    <div class="test-instructions">
+      <h3>🧪 State Persistence Test Instructions:</h3>
+      <ol>
+        <li><strong>Open the chat widget</strong> by clicking the floating button in the bottom-right corner</li>
+        <li><strong>Type "shoes"</strong> to see product recommendations</li>
+        <li><strong>Click on a product card</strong> to test the links</li>
+        <li><strong>Navigate to Page 2 or Page 3</strong> using the links above</li>
+        <li><strong>Verify the chat state persists</strong> - your conversation should still be there!</li>
+        <li><strong>Continue the conversation</strong> on any page</li>
+      </ol>
+    </div>
+    
+    <h2>What to Test:</h2>
+    <ul>
+      <li>✅ Chat widget appears and opens correctly</li>
+      <li>✅ Typing "shoes" shows product cards with real images</li>
+      <li>✅ Product cards have proper links and hover effects</li>
+      <li>✅ Chat state persists when navigating between pages</li>
+      <li>✅ Product clicks are tracked in the chat</li>
+      <li>✅ Responsive design works on mobile</li>
+    </ul>
+    
+    <h2>Expected Product Cards Should Show:</h2>
+    <ul>
+      <li>Real shoe images from Unsplash</li>
+      <li>Product names, brands, and descriptions</li>
+      <li>Available sizes and colors</li>
+      <li>Prices in proper format</li>
+      <li>Clickable "View Product" buttons</li>
+    </ul>
+  </div>
+
+  <!-- Widget container -->
+  <div id="assistant-widget"></div>
+
+  <!-- Load the widget -->
+  <script src="./dist/assistant-widget.umd.js"></script>
+  <script>
+    // Initialize the widget
+    AssistantWidget.createWidget('#assistant-widget', {
+      apiUrl: 'https://api.example.com/chat',
+      title: 'Shoe Assistant',
+      primaryColor: '#007bff'
+    });
+    
+    console.log('Page 1 loaded - Chat state should persist across navigation');
+  </script>
+</body>
+</html>
