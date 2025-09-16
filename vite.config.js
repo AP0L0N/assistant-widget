@@ -11,11 +11,9 @@ export default defineConfig({
       formats: ['umd']
     },
     rollupOptions: {
-      external: ['vue'],
+      external: [],
       output: {
-        globals: {
-          vue: 'Vue'
-        }
+        globals: {}
       }
     },
     outDir: 'dist'

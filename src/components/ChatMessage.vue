@@ -3,54 +3,11 @@
     <div class="message-content">
       <div class="message-text" v-html="formattedContent"></div>
       
-      <!-- Product Suggestions -->
-      <div v-if="message.products && message.products.length" class="product-suggestions">
-        <h4 class="suggestions-title">Recommended Products:</h4>
-        <div class="products-grid">
-          <div
-            v-for="product in message.products"
-            :key="product.id"
-            class="product-card"
-            @click="handleProductClick(product)"
-          >
-            <div class="product-image" v-if="product.image">
-              <img :src="product.image" :alt="product.name" />
-            </div>
-            <div class="product-info">
-              <h5 class="product-name">{{ product.name }}</h5>
-              <p class="product-brand" v-if="product.brand">{{ product.brand }}</p>
-              <p class="product-description" v-if="product.description">
-                {{ product.description }}
-              </p>
-              <div class="product-details" v-if="product.category">
-                <span class="product-category">{{ product.category }}</span>
-                <div class="product-options" v-if="product.sizes || product.colors">
-                  <div v-if="product.sizes" class="product-sizes">
-                    <strong>Sizes:</strong> {{ product.sizes.join(', ') }}
-                  </div>
-                  <div v-if="product.colors" class="product-colors">
-                    <strong>Colors:</strong> {{ product.colors.join(', ') }}
-                  </div>
-                </div>
-              </div>
-              <div class="product-price" v-if="product.price">
-                ${{ product.price }}
-              </div>
-              <div class="product-actions">
-                <a 
-                  :href="product.url || '#'"
-                  class="product-button"
-                  :style="{ backgroundColor: primaryColor }"
-                  @click="handleProductClick(product)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View Product
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Product notification (just text, no cards) -->
+      <div v-if="message.products && message.products.length" class="product-notification">
+        <p class="notification-text">
+          📦 {{ message.products.length }} recommended product{{ message.products.length > 1 ? 's' : '' }} shown in sidebar →
+        </p>
       </div>
     </div>
     

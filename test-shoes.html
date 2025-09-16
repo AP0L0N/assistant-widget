@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Shoes - Assistant Widget</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👟</text></svg>">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .test-content {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .test-button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 5px;
+      font-size: 16px;
+    }
+    .test-button:hover {
+      background: #0056b3;
+    }
+    .console-output {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-content">
+    <h1>👟 Shoe Test Page</h1>
+    <p>This page specifically tests the shoe recommendation functionality.</p>
+    
+    <h2>Quick Test Buttons:</h2>
+    <button class="test-button" onclick="testMessage('shoes')">Test "shoes"</button>
+    <button class="test-button" onclick="testMessage('I need running shoes')">Test "running shoes"</button>
+    <button class="test-button" onclick="testMessage('sneakers')">Test "sneakers"</button>
+    <button class="test-button" onclick="testMessage('basketball shoes')">Test "basketball shoes"</button>
+    <button class="test-button" onclick="testMessage('casual footwear')">Test "casual footwear"</button>
+    
+    <h2>Expected Results:</h2>
+    <ul>
+      <li>✅ "shoes" should show 5 shoe products with images</li>
+      <li>✅ "running shoes" should show Nike Air Max and Adidas Ultraboost</li>
+      <li>✅ "sneakers" should show all shoe products</li>
+      <li>✅ "basketball shoes" should show Jordan 1</li>
+      <li>✅ "casual footwear" should show Converse and Vans</li>
+    </ul>
+    
+    <h2>Debug Console:</h2>
+    <div class="console-output" id="console-output">
+      Ready to test... Click a button above or type in the chat widget.
+    </div>
+    
+    <h2>Instructions:</h2>
+    <ol>
+      <li>Click the floating chat button in the bottom-right corner</li>
+      <li>Click one of the test buttons above, or type "shoes" manually</li>
+      <li>You should see product cards with real shoe images</li>
+      <li>Check the debug console below for API processing logs</li>
+    </ol>
+  </div>
+
+  <!-- Widget container -->
+  <div id="assistant-widget"></div>
+
+  <!-- Load the widget -->
+  <script src="./dist/assistant-widget.umd.js"></script>
+  <script>
+    const consoleOutput = document.getElementById('console-output');
+    
+    function log(message) {
+      const timestamp = new Date().toLocaleTimeString();
+      consoleOutput.innerHTML += `[${timestamp}] ${message}\n`;
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+    
+    // Initialize the widget
+    AssistantWidget.createWidget('#assistant-widget', {
+      apiUrl: 'https://api.example.com/chat',
+      title: 'Shoe Test Assistant',
+      primaryColor: '#007bff'
+    });
+    
+    // Test function to simulate user messages
+    function testMessage(message) {
+      log(`Testing message: "${message}"`);
+      const input = document.querySelector('.message-input');
+      if (input) {
+        input.value = message;
+        input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
+        log(`Sent message: "${message}"`);
+      } else {
+        log('Error: Message input not found');
+      }
+    }
+    
+    // Override console.log to capture API logs
+    const originalLog = console.log;
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      if (args[0] && args[0].includes('API:')) {
+        log(args.join(' '));
+      }
+    };
+    
+    log('Shoe test page loaded - Ready to test!');
+  </script>
+</body>
+</html>

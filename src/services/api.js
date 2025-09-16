@@ -1,29 +1,48 @@
 import axios from 'axios'
 
-// Mock API service for demonstration
-// In production, this would connect to your actual CMS API
+// Real API service for CraftCMS integration
 export const chatService = {
-  async sendMessage(message, apiUrl) {
+  async sendMessage(message, apiUrl, sessionId) {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
+      console.log('Sending message to:', apiUrl)
       
-      // Mock response based on message content
-      const response = this.generateMockResponse(message)
-      return response
+      const response = await axios.post(apiUrl, {
+        message: message,
+        timestamp: new Date().toISOString(),
+        sessionId: sessionId
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: false, // Set to true if you need to send cookies
+        timeout: 10000 // 10 second timeout
+      })
+      
+      console.log('API Response:', response.data)
+      return response.data
     } catch (error) {
       console.error('API Error:', error)
-      throw new Error('Failed to send message')
+      
+      // Fallback to mock response if API fails
+      if (error.code === 'ERR_NETWORK' || error.response?.status === 0) {
+        console.log('Network error, falling back to mock response')
+        return this.generateMockResponse(message)
+      }
+      
+      throw new Error(`Failed to send message: ${error.message}`)
     }
   },
 
   generateMockResponse(message) {
     const lowerMessage = message.toLowerCase()
+    console.log('API: Processing message:', message, 'Lowercase:', lowerMessage)
     
     // Product suggestions based on keywords
     if (lowerMessage.includes('shoe') || lowerMessage.includes('sneaker') || lowerMessage.includes('footwear')) {
+      console.log('API: Matched shoe keywords, returning shoe products')
       return {
-        message: "I found some amazing shoes for you! Here are my top recommendations:",
+        message: "I've found some amazing shoes for you! Check out the recommended products in the sidebar on the right. Each one has been carefully selected based on quality, style, and value.",
         products: [
           {
             id: 1,
@@ -91,7 +110,7 @@ export const chatService = {
     
     if (lowerMessage.includes('shirt') || lowerMessage.includes('t-shirt')) {
       return {
-        message: "Here are some stylish shirts I recommend:",
+        message: "I've curated some stylish shirts for you! Take a look at the recommendations in the sidebar - they're perfect for any occasion.",
         products: [
           {
             id: 4,
@@ -133,6 +152,7 @@ export const chatService = {
     }
     
     // Default response
+    console.log('API: No keyword match, returning default response')
     return {
       message: "Thanks for your message! I'm an AI assistant that can help you find products, answer questions about sizing, and provide style recommendations. What can I help you with today?",
       products: []
@@ -140,31 +160,12 @@ export const chatService = {
   }
 }
 
-// Real API service (uncomment and modify for production)
-/*
-export const chatService = {
-  async sendMessage(message, apiUrl) {
-    try {
-      const response = await axios.post(apiUrl, {
-        message: message,
-        timestamp: new Date().toISOString(),
-        sessionId: this.getSessionId()
-      })
-      
-      return response.data
-    } catch (error) {
-      console.error('API Error:', error)
-      throw new Error('Failed to send message')
-    }
-  },
-  
-  getSessionId() {
-    let sessionId = localStorage.getItem('assistant-widget-session')
-    if (!sessionId) {
-      sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
-      localStorage.setItem('assistant-widget-session', sessionId)
-    }
-    return sessionId
+// Session management
+export const getSessionId = () => {
+  let sessionId = localStorage.getItem('assistant-widget-session')
+  if (!sessionId) {
+    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+    localStorage.setItem('assistant-widget-session', sessionId)
   }
+  return sessionId
 }
-*/
