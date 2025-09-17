@@ -734,32 +734,39 @@ export default {
     },
     extractProductsFromMessages() {
       // Extract all products from AI messages and display in sidebar
-      const products = []
-      this.messages.forEach(message => {
-        if (message.type === 'ai' && message.products) {
-          message.products.forEach(product => {
-            // Transform products to match expected format
-            const transformedProduct = {
-              id: product.id,
-              name: product.title || product.name,
-              description: product.description || '',
-              price: product.price || 0,
-              image: product.imageUrl || product.image,
-              url: product.url || '#',
-              category: product.category || '',
-              brand: product.brand || '',
-              sizes: product.sizes || [],
-              colors: product.colors || []
-            }
-            
-            // Avoid duplicates
-            if (!products.find(p => p.id === transformedProduct.id)) {
-              products.push(transformedProduct)
-            }
-          })
-        }
-      })
-      this.displayedProducts = products.slice(0, 6) // Show max 6 products
+      this.displayedProducts = [];
+      // Find the last AI message that has products
+      const lastAiWithProducts = [...this.messages].reverse().find(
+        message => message.type === 'ai' && Array.isArray(message.products) && message.products.length > 0
+      );
+
+      console.log('this.messages', this.messages)
+      console.log('lastAiWithProducts', lastAiWithProducts)
+
+      if (lastAiWithProducts) {
+        const products = [];
+        lastAiWithProducts.products.forEach(product => {
+          const transformedProduct = {
+            id: product.id,
+            name: product.title || product.name,
+            description: product.description || '',
+            price: product.price || 0,
+            image: product.imageUrl || product.image,
+            url: product.url || '#',
+            category: product.category || '',
+            brand: product.brand || '',
+            sizes: product.sizes || [],
+            colors: product.colors || []
+          };
+          // Avoid duplicates
+          if (!products.find(p => p.id === transformedProduct.id)) {
+            products.push(transformedProduct);
+          }
+        });
+        this.displayedProducts = products.slice(0, 6); // Show max 6 products
+      } else {
+        this.displayedProducts = [];
+      }
     },
     loadRecentSearches() {
       try {
