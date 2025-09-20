@@ -84,7 +84,7 @@
       </div>
 
       <!-- Main Chat Area -->
-      <div class="chat-main" :class="{ 'with-sidebar': activeTab === 'ai-assistant' }">
+      <div class="chat-main">
 
         <!-- Tab Content -->
         <div class="tab-content">
@@ -326,34 +326,6 @@
         </div>
       </div>
 
-      <!-- Product Sidebar - Only show in AI Assistant tab -->
-      <div v-if="activeTab === 'ai-assistant'" class="product-sidebar">
-        <div class="sidebar-header">
-          <h4>Recommended Products</h4>
-          <span class="product-count">{{ displayedProducts.length }}</span>
-        </div>
-        <div class="sidebar-content">
-          <div v-if="displayedProducts.length" class="products-list">
-            <div
-              v-for="product in displayedProducts"
-              :key="product.id"
-              class="product-card-mini"
-              @click="handleProductClick(product)"
-            >
-              <div class="product-image-mini" v-if="product.image">
-                <img :src="product.image" :alt="product.name" />
-              </div>
-              <div class="product-info-mini">
-                <h5 class="product-name-mini">{{ product.name }}</h5>
-                <p class="product-price-mini" v-if="product.price">${{ product.price }}</p>
-              </div>
-            </div>
-          </div>
-          <div v-else class="no-products">
-            <p>No products to show yet. Start a conversation to see recommendations!</p>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -397,7 +369,6 @@ export default {
       hashKey: getHashKey(),
       activeTab: 'ai-assistant',
       recentSearches: [],
-      displayedProducts: [],
       openFaqIndex: null,
       isSubmitting: false,
       isDarkTheme: false,
@@ -456,11 +427,6 @@ export default {
     
     // Listen for theme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', this.detectTheme)
-  },
-  watch: {
-    messages() {
-      this.extractProductsFromMessages()
-    }
   },
   methods: {
     async toggleChat() {
@@ -524,8 +490,7 @@ export default {
       } finally {
         this.isLoading = false
         this.scrollToBottom()
-        // Extract products for sidebar display
-        this.extractProductsFromMessages()
+        // Products are now displayed inline in chat messages
       }
     },
     addMessage(message) {
@@ -564,8 +529,7 @@ export default {
           this.messages = [helloMessage]
         }
         
-        // Update displayed products from history
-        this.extractProductsFromMessages()
+        // Products are now displayed inline in chat messages
       } catch (error) {
         console.error('Error loading chat history:', error)
         // If API fails, show just the hello message
@@ -582,19 +546,21 @@ export default {
       console.log('Product clicked:', product)
       this.addMessage({
         id: this.getMessageId(),
-        type: 'user',
-        content: `I'm interested in ${product.name}`,
+        type: 'ai',
+        content: `I'm redirecting you to ${product.title}. Please wait...`,
         timestamp: new Date()
       })
       
       // Add to recent searches if not already there
-      if (!this.recentSearches.includes(product.name)) {
-        this.recentSearches.unshift(product.name)
+      if (!this.recentSearches.includes(product.title)) {
+        this.recentSearches.unshift(product.title)
         if (this.recentSearches.length > 5) {
           this.recentSearches = this.recentSearches.slice(0, 5)
         }
         this.saveRecentSearches()
       }
+
+      window.location.href = product.url
     },
     sendQuickMessage(message) {
       this.currentMessage = message
@@ -732,42 +698,6 @@ export default {
       // Detect if user prefers dark theme
       this.isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
     },
-    extractProductsFromMessages() {
-      // Extract all products from AI messages and display in sidebar
-      this.displayedProducts = [];
-      // Find the last AI message that has products
-      const lastAiWithProducts = [...this.messages].reverse().find(
-        message => message.type === 'ai' && Array.isArray(message.products) && message.products.length > 0
-      );
-
-      console.log('this.messages', this.messages)
-      console.log('lastAiWithProducts', lastAiWithProducts)
-
-      if (lastAiWithProducts) {
-        const products = [];
-        lastAiWithProducts.products.forEach(product => {
-          const transformedProduct = {
-            id: product.id,
-            name: product.title || product.name,
-            description: product.description || '',
-            price: product.price || 0,
-            image: product.imageUrl || product.image,
-            url: product.url || '#',
-            category: product.category || '',
-            brand: product.brand || '',
-            sizes: product.sizes || [],
-            colors: product.colors || []
-          };
-          // Avoid duplicates
-          if (!products.find(p => p.id === transformedProduct.id)) {
-            products.push(transformedProduct);
-          }
-        });
-        this.displayedProducts = products.slice(0, 6); // Show max 6 products
-      } else {
-        this.displayedProducts = [];
-      }
-    },
     loadRecentSearches() {
       try {
         const saved = localStorage.getItem('assistant-widget-recent-searches')
@@ -810,8 +740,6 @@ export default {
       }
       this.messages = [helloMessage]
       
-      // Clear displayed products
-      this.displayedProducts = []
       
       // Clear current message input
       this.currentMessage = ''

@@ -3,11 +3,33 @@
     <div class="message-content">
       <div class="message-text" v-html="formattedContent"></div>
       
-      <!-- Product notification (just text, no cards) -->
-      <div v-if="message.products && message.products.length" class="product-notification">
-        <p class="notification-text">
-          📦 {{ message.products.length }} recommended product{{ message.products.length > 1 ? 's' : '' }} shown in sidebar →
-        </p>
+      <!-- Product cards inline -->
+      <div v-if="message.products && message.products.length" class="product-cards">
+        <div class="products-header">
+          <h4>Recommended Products</h4>
+          <span class="product-count">{{ message.products.length }}</span>
+        </div>
+        <div class="products-grid">
+          <div
+            v-for="product in message.products"
+            :key="product.id"
+            class="product-card"
+            @click="handleProductClick(product)"
+          >
+            <div class="product-image" v-if="product.imageUrl || product.image">
+              <img :src="product.imageUrl || product.image" :alt="product.title || product.name" />
+            </div>
+            <div class="product-info">
+              <h5 class="product-name">{{ product.title || product.name }}</h5>
+              <p class="product-description" v-if="product.description">{{ product.description }}</p>
+              <p class="product-price" v-if="product.price">${{ product.price }}</p>
+              <div class="product-meta">
+                <span class="product-brand" v-if="product.brand">{{ product.brand }}</span>
+                <span class="product-category" v-if="product.category">{{ product.category }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     
