@@ -23,7 +23,7 @@
           <button 
             class="sidebar-tab" 
             :class="{ active: activeTab === 'ai-assistant' }"
-            @click="activeTab = 'ai-assistant'"
+            @click="switchToAIAssistant"
           >
             <span class="tab-icon">🤖</span>
             <span class="tab-text">AI Assistant</span>
@@ -79,6 +79,14 @@
           >
             <span class="tab-icon">🆘</span>
             <span class="tab-text">Contact Support</span>
+          </button>
+          <button 
+            class="sidebar-tab" 
+            :class="{ active: activeTab === 'history' }"
+            @click="activeTab = 'history'"
+          >
+            <span class="tab-icon">📚</span>
+            <span class="tab-text">History</span>
           </button>
         </div>
       </div>
@@ -323,6 +331,49 @@
               </form>
             </div>
           </div>
+
+          <div v-if="activeTab === 'history'" class="history-tab">
+            <div class="history-content">
+              <div class="history-header">
+                <h4>📚 Browse History</h4>
+                <button 
+                  v-if="browsedHistory.length > 0"
+                  @click="clearHistory" 
+                  class="clear-history-btn"
+                  title="Clear all history"
+                >
+                  🗑️ Clear All
+                </button>
+              </div>
+              
+              <div v-if="browsedHistory.length > 0" class="history-grid">
+                <div
+                  v-for="item in browsedHistory"
+                  :key="item.id + '_' + item.browsedAt"
+                  class="history-item"
+                  @click="handleHistoryItemClick(item)"
+                >
+                  <div class="history-image" v-if="item.imageUrl || item.image">
+                    <img :src="item.imageUrl || item.image" :alt="item.title || item.name" />
+                  </div>
+                  <div class="history-info">
+                    <h5 class="history-name">{{ item.title || item.name }}</h5>
+                    <p class="history-price" v-if="item.price">${{ item.price }}</p>
+                    <div class="history-meta">
+                      <span class="history-brand" v-if="item.brand">{{ item.brand }}</span>
+                      <span class="history-date">{{ formatHistoryDate(item.browsedAt) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-else class="no-history">
+                <div class="no-history-icon">📚</div>
+                <h5>No browsing history yet</h5>
+                <p>Start browsing products to see them here!</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -385,6 +436,7 @@ export default {
       },
       isTrackingOrder: false,
       orderStatus: null,
+      browsedHistory: [],
       faqItems: [
         {
           question: "How do I place an order?",
@@ -423,6 +475,7 @@ export default {
   },
   mounted() {
     this.loadRecentSearches()
+    this.loadBrowsedHistory()
     this.detectTheme()
     
     // Listen for theme changes
@@ -442,6 +495,14 @@ export default {
     },
     closeChat() {
       this.isOpen = false
+    },
+    switchToAIAssistant() {
+      this.activeTab = 'ai-assistant'
+      // Scroll to bottom and focus input when switching to AI Assistant tab
+      this.$nextTick(() => {
+        this.scrollToBottom()
+        this.focusInput()
+      })
     },
     focusInput() {
       if (this.$refs.messageInput) {
@@ -551,21 +612,24 @@ export default {
         timestamp: new Date()
       })
       
-      // Add to recent searches if not already there
-      if (!this.recentSearches.includes(product.title)) {
-        this.recentSearches.unshift(product.title)
-        if (this.recentSearches.length > 5) {
-          this.recentSearches = this.recentSearches.slice(0, 5)
+        // Add to recent searches if not already there
+        if (!this.recentSearches.includes(product.title)) {
+          this.recentSearches.unshift(product.title)
+          if (this.recentSearches.length > 5) {
+            this.recentSearches = this.recentSearches.slice(0, 5)
+          }
+          this.saveRecentSearches()
         }
-        this.saveRecentSearches()
-      }
 
-      window.location.href = product.url
+        // Add to browsing history
+        this.addToHistory(product)
+
+        window.location.href = product.url
     },
     sendQuickMessage(message) {
       this.currentMessage = message
       this.sendMessage()
-      this.activeTab = 'ai-assistant' // Switch to AI assistant tab after sending
+      this.switchToAIAssistant() // Switch to AI assistant tab after sending
     },
     toggleFaq(index) {
       this.openFaqIndex = this.openFaqIndex === index ? null : index
@@ -603,7 +667,7 @@ export default {
         }
         
         // Switch to AI assistant tab
-        this.activeTab = 'ai-assistant'
+        this.switchToAIAssistant()
         
       } catch (error) {
         console.error('Error submitting contact form:', error)
@@ -749,6 +813,72 @@ export default {
         this.focusInput()
       })
     },
+    loadBrowsedHistory() {
+      try {
+        const saved = localStorage.getItem('assistant-widget-browsed-history')
+        if (saved) {
+          this.browsedHistory = JSON.parse(saved)
+        }
+      } catch (error) {
+        console.error('Error loading browsed history:', error)
+      }
+    },
+    saveBrowsedHistory() {
+      try {
+        localStorage.setItem('assistant-widget-browsed-history', JSON.stringify(this.browsedHistory))
+      } catch (error) {
+        console.error('Error saving browsed history:', error)
+      }
+    },
+    addToHistory(product) {
+      const historyItem = {
+        ...product,
+        browsedAt: new Date().toISOString()
+      }
+      
+      // Remove any existing entry for this product to avoid duplicates
+      this.browsedHistory = this.browsedHistory.filter(item => item.id !== product.id)
+      
+      // Add to the beginning of the array (most recent first)
+      this.browsedHistory.unshift(historyItem)
+      
+      // Limit to 50 items to prevent localStorage from getting too large
+      if (this.browsedHistory.length > 50) {
+        this.browsedHistory = this.browsedHistory.slice(0, 50)
+      }
+      
+      this.saveBrowsedHistory()
+    },
+    handleHistoryItemClick(item) {
+      // Navigate to the product URL
+      window.location.href = item.url
+    },
+    clearHistory() {
+      if (confirm('Are you sure you want to clear all browsing history?')) {
+        this.browsedHistory = []
+        this.saveBrowsedHistory()
+      }
+    },
+    formatHistoryDate(dateString) {
+      const date = new Date(dateString)
+      const now = new Date()
+      const diffMs = now - date
+      const diffMins = Math.floor(diffMs / 60000)
+      const diffHours = Math.floor(diffMs / 3600000)
+      const diffDays = Math.floor(diffMs / 86400000)
+      
+      if (diffMins < 1) {
+        return 'Just now'
+      } else if (diffMins < 60) {
+        return `${diffMins}m ago`
+      } else if (diffHours < 24) {
+        return `${diffHours}h ago`
+      } else if (diffDays < 7) {
+        return `${diffDays}d ago`
+      } else {
+        return date.toLocaleDateString()
+      }
+    }
   }
 }
 </script>
